@@ -36,7 +36,7 @@
 struct dpll_pin {
 	int id;
 	enum dpll_pin_type type;
-	int ref_count;
+	refcount_t ref_count;
 	struct dpll_pin_ops *ops;
 	struct mutex lock;
 	void *priv;

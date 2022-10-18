@@ -133,8 +133,8 @@ static int __dpll_cmd_dump_sources(struct dpll_device *dpll,
 			}
 			ret = 0;
 		}
-		if (pin->ops->get_prio) {
-			prio = pin->ops->get_prio(pin, dpll);
+		if (dpll->ops->get_prio) {
+			prio = dpll->ops->get_prio(dpll, pin);
 			if (nla_put_u32(msg, DPLLA_SOURCE_PIN_PRIO, prio)) {
 				nla_nest_cancel(msg, src_attr);
 				ret = -EMSGSIZE;
@@ -393,10 +393,10 @@ static int dpll_genl_cmd_set_source_prio(struct sk_buff *skb, struct genl_info *
 
 	mutex_lock(&dpll->lock);
 	pin = dpll_pin_get_by_id(dpll, src_id);
-	if (!pin || !pin->ops || !pin->ops->set_prio)
+	if (!dpll->ops || !dpll->ops->set_prio)
 		ret = -EOPNOTSUPP;
 	else
-		ret = pin->ops->set_prio(pin, dpll, prio);
+		ret = dpll->ops->set_prio(dpll, pin, prio);
 	mutex_unlock(&dpll->lock);
 
 	if (!ret)
