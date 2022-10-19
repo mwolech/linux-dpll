@@ -22,6 +22,8 @@ struct dpll_device_ops {
 	int (*get_source_supported)(struct dpll_device *dpll, int sma, int type);
 	int (*get_output_type)(struct dpll_device *dpll, int sma);
 	int (*get_output_supported)(struct dpll_device, int sma, int type);
+	int (*get_prio)(struct dpll_device *dpll, struct dpll_pin *pin);
+	int (*set_prio)(struct dpll_device *dpll, struct dpll_pin *pin, int prio);
 };
 
 struct dpll_pin_ops {
@@ -30,8 +32,6 @@ struct dpll_pin_ops {
 	int (*set_type)(struct dpll_pin *pin, int type);
 	int (*set_source)(struct dpll_pin *pin, struct dpll_device *dpll, int id);
 	int (*set_flags)(struct dpll_pin *pin, struct dpll_device *dpll, int flags);
-	int (*get_prio)(struct dpll_pin *pin, struct dpll_device *dpll);
-	int (*set_prio)(struct dpll_pin *pin, struct dpll_device *dpll, int prio);
 };
 
 enum dpll_pin_type {

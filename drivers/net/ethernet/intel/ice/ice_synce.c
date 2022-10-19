@@ -361,13 +361,13 @@ static int ice_synce_get_src_select_supported(struct dpll_device *dpll, int mode
 /**
  * ice_synce_get_source_prio
  * @dpll: registered dpll pointer
- * @id: source index
+ * @pin: dpll pin object
  *
  * dpll subsystem callback.
  * Get source priority value.
  * Return: source priority value
  */
-static int ice_synce_get_source_prio(struct dpll_pin *pin, struct dpll_device *dpll)
+static int ice_synce_get_source_prio(struct dpll_device *dpll, struct dpll_pin *pin)
 {
 	struct ice_pf *pf = dpll_priv(dpll);
 	u8 idx = (u8)pin_id(pin);
@@ -389,7 +389,7 @@ static int ice_synce_get_source_prio(struct dpll_pin *pin, struct dpll_device *d
 /**
  * ice_synce_set_source_prio
  * @dpll: registered dpll pointer
- * @id: source index
+ * @pin: dpll pin object
  * @prio: expected priority value
  *
  * dpll subsystem callback.
@@ -398,8 +398,8 @@ static int ice_synce_get_source_prio(struct dpll_pin *pin, struct dpll_device *d
  * * 0 - success
  * * negative - failure
  */
-static int ice_synce_set_source_prio(struct dpll_pin *pin,
-				     struct dpll_device *dpll, int prio)
+static int ice_synce_set_source_prio(struct dpll_device *dpll,
+				     struct dpll_pin *pin, int prio)
 {
 	struct ice_pf *pf = dpll_priv(dpll);
 	u8 idx, priov = (u8)prio;
@@ -435,8 +435,6 @@ static struct dpll_pin_ops ice_synce_source_ops = {
 	.get_type = ice_synce_get_source_type,
 	.set_type = ice_synce_set_source_type,
 	.is_type_supported = ice_synce_get_source_supported,
-	.get_prio = ice_synce_get_source_prio,
-	.set_prio = ice_synce_set_source_prio,
 };
 
 static struct dpll_pin_ops ice_synce_output_ops = {
@@ -450,6 +448,8 @@ static struct dpll_device_ops ice_synce_dpll_ops = {
 	.get_lock_status = ice_synce_get_lock_status,
 	.get_source_select_mode = ice_synce_get_source_select_mode,
 	.get_source_select_mode_supported = ice_synce_get_src_select_supported,
+	.get_prio = ice_synce_get_source_prio,
+	.set_prio = ice_synce_set_source_prio,
 };
 
 /**

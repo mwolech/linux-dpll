@@ -190,6 +190,7 @@ void dpll_init_pin(struct dpll_pin **pin, enum dpll_pin_type type,
 	(*pin)->type = type;
 	(*pin)->priv = priv;
 	(*pin)->id = id;
+	refcount_set(&((*pin)->ref_count), 0);
 	if (name)
 		snprintf((*pin)->name, PIN_NAME_LENGTH, "%s", name);
 	else
@@ -241,7 +242,7 @@ int dpll_pin_register(struct dpll_device *dpll, struct dpll_pin *pin)
 	mutex_lock(&dpll->lock);
 	ret = pin_register(&dpll->pins, pin);
 	if (!ret) {
-		pin->ref_count++;
+		refcount_inc(&pin->ref_count);
 		change_pin_count(dpll, pin, true);
 		xa_set_mark(&dpll->pins, dpll->id, DPLL_REGISTERED);
 	}
@@ -287,9 +288,7 @@ int dpll_pin_deregister(struct dpll_device *dpll, struct dpll_pin *pin)
 	mutex_unlock(&dpll->lock);
 
 	if (!ret) {
-		mutex_lock(&pin->lock);
-		pin->ref_count--;
-		mutex_unlock(&pin->lock);
+		refcount_dec(&pin->ref_count);
 		dpll_notify_pin_deregister(dpll->id, pin->id);
 	}
 
@@ -311,7 +310,7 @@ void dpll_pin_free(struct dpll_device *dpll, struct dpll_pin *pin)
 	if (!pin_found)
 		return;
 
-	if (pin->ref_count)
+	if (refcount_read(&pin->ref_count) != 0)
 		return;
 
 	xa_destroy(&pin->muxed_pins);
@@ -333,7 +332,7 @@ void dpll_muxed_pin_free(struct dpll_pin *parent_pin, struct dpll_pin *pin)
 	if (!pin_found)
 		return;
 
-	if (pin->ref_count)
+	if (refcount_read(&pin->ref_count) != 0)
 		return;
 
 	xa_destroy(&pin->muxed_pins);
@@ -348,9 +347,7 @@ int dpll_muxed_pin_register(struct dpll_pin *parent_pin, struct dpll_pin *pin)
 	ret = pin_register(&parent_pin->muxed_pins, pin);
 
 	if (!ret) {
-		mutex_lock(&pin->lock);
-		pin->ref_count++;
-		mutex_unlock(&pin->lock);
+		refcount_inc(&pin->ref_count);
 		dpll_notify_muxed_pin_register(parent_pin, pin->id);
 	}
 
@@ -370,9 +367,7 @@ int dpll_muxed_pin_deregister(struct dpll_pin *parent_pin, struct dpll_pin *pin)
 	mutex_unlock(&parent_pin->lock);
 
 	if (!ret) {
-		mutex_lock(&pin->lock);
-		pin->ref_count--;
-		mutex_unlock(&pin->lock);
+		refcount_dec(&pin->ref_count);
 		dpll_notify_muxed_pin_deregister(parent_pin, pin->id);
 	}
 
